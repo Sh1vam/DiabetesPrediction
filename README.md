@@ -1,4 +1,4 @@
-# [DiabetesPrediction Using Machine Learning](https://diabetesprediction-zj8uqqubzeajn974ywkjfj.streamlit.app/)
+# [DiabetesPrediction Using Machine Learning](https://diabetesprediction-5bspeba5rff6kwdtu8taqo.streamlit.app/)
 pima-indians-diabetes prediction using ML
 ## External Library Used 
 ### Pandas,Seaborn,Numpy,Scikit-Learn,Eel,MatplotLib
