@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diabetes Prediction</title>
+    <style>
+        /* Reset default browser styles */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Body styles */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f8f8f8;
+        }
+
+        /* Container styles */
+        .container {
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Heading styles */
+        h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        /* Form styles */
+        form {
+            margin-bottom: 20px;
+        }
+
+        label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #555;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="number"]:focus {
+            border-color: #3399ff;
+            outline: none;
+        }
+
+        button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background-color: #3399ff;
+            color: #fff;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #2673c9;
+        }
+
+        /* Result area styles */
+        #result {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f2f2f2;
+            border-radius: 3px;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h2>Diabetes Prediction</h2>
+    <form id="diabetesForm">
+        <label for="pregnancies">Pregnancies:</label>
+        <input type="number" id="pregnancies" step="1" min="1" placeholder="Enter number of pregnancies" oninput="validateInput(this)" required><br>
+
+        <label for="glucose">Glucose:</label>
+        <input type="number" id="glucose" step="any" min="1" placeholder="Enter glucose level" required><br>
+
+        <label for="bloodPressure">Blood Pressure:</label>
+        <input type="number" id="bloodPressure" step="any" min="1" placeholder="Enter blood pressure" required><br>
+
+        <label for="skinThickness">Skin Thickness:</label>
+        <input type="number" id="skinThickness" step="any" min="1" placeholder="Enter skin thickness" required><br>
+
+        <label for="insulin">Insulin:</label>
+        <input type="number" id="insulin" step="any" min="1" placeholder="Enter insulin level" required><br>
+
+        <label for="bmiOption">Select BMI input:</label>
+        <select id="bmiOption" onchange="toggleBMIInput()">
+			<option Disabled selected>Choose</option>
+            <option value="direct">BMI</option>
+            <option value="heightWeight">Height and Weight</option>
+        </select><br>
+
+        <div id="bmiFields" class="hidden">
+            <label for="bmi">BMI:</label>
+            <input type="number" id="bmi" step="any" min="1" placeholder="Enter BMI" required><br>
+        </div>
+
+        <div id="heightWeightFields" class="hidden">
+            <label for="height">Height (cm):</label>
+            <input type="number" id="height" step="any" min="1" placeholder="Enter height in cm" required><br>
+
+            <label for="weight">Weight (kg):</label>
+            <input type="number" id="weight" step="any" min="1" placeholder="Enter weight in kg" required><br>
+        </div>
+
+        <label for="diabetesPedigreeFunction">Diabetes Pedigree Function:</label>
+        <input type="number" id="diabetesPedigreeFunction" step="any" min="1" placeholder="Enter diabetes pedigree function" required><br>
+
+        <label for="age">Age:</label>
+        <input type="number" id="age" min="1" placeholder="Enter age" oninput="validateInput(this)" required><br>
+
+        <button type="button" onclick="predictDiabetes()">Predict Diabetes</button>
+    </form>
+
+    <div id="result"></div>
+
+    <!-- Include the Eel JavaScript library -->
+    <script src="/eel.js"></script>
+
+    <script>
+        function predictDiabetes() {
+            const pregnancies = document.getElementById('pregnancies').value;
+            const glucose = document.getElementById('glucose').value;
+            const bloodPressure = document.getElementById('bloodPressure').value;
+            const skinThickness = document.getElementById('skinThickness').value;
+            const insulin = document.getElementById('insulin').value;
+            const diabetesPedigreeFunction = document.getElementById('diabetesPedigreeFunction').value;
+            const age = document.getElementById('age').value;
+
+            let bmi;
+            if (document.getElementById('bmiFields').classList.contains('hidden')) {
+                const height = document.getElementById('height').value;
+                const weight = document.getElementById('weight').value;
+
+                if (!height || !weight) {
+                    alert('Please enter both height and weight.');
+                    return;
+                }
+
+                bmi = calculateBMI(weight, height);
+            } else {
+                bmi = document.getElementById('bmi').value;
+            }
+
+            // Send the input data to the Python function using Eel
+            eel.Diabetes_Prediction(pregnancies, glucose, bloodPressure, skinThickness, insulin, bmi, diabetesPedigreeFunction, age)(
+                function(response) {
+                    document.getElementById('result').innerText = response;
+                });
+        }
+
+        function calculateBMI(weight, height) {
+            const heightInMeters = height / 100;
+            const bmi = weight / (heightInMeters * heightInMeters);
+            return bmi.toFixed(2);
+        }
+
+        function toggleBMIInput() {
+            const bmiOption = document.getElementById('bmiOption').value;
+            const bmiFields = document.getElementById('bmiFields');
+            const heightWeightFields = document.getElementById('heightWeightFields');
+
+            if (bmiOption === 'direct') {
+                bmiFields.classList.remove('hidden');
+                heightWeightFields.classList.add('hidden');
+            } else {
+                bmiFields.classList.add('hidden');
+                heightWeightFields.classList.remove('hidden');
+            }
+        }
+
+        function validateInput(inputField) {
+            // Regex pattern to match anything other than digits
+            const pattern = /[^0-9]/;
+            // Check if the input field value contains any non-digit character
+            if (pattern.test(inputField.value)) {
+                // If it does, remove the non-digit characters
+                inputField.value = inputField.value.replace(pattern, '');
+            }
+        }
+    </script>
+</body>
+</html>
