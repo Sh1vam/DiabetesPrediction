@@ -1,16 +1,12 @@
-# Import necessary libraries
 import csv
 import numpy as np
 import joblib
 from sklearn.preprocessing import StandardScaler
-from sklearn.ensemble import GradientBoostingClassifier
-import eel
+import streamlit as st
+
 # Ignore all warnings
 import warnings
 warnings.filterwarnings("ignore")
-
-# Initialize Eel
-eel.init('web')  # 'web' is the folder name where your HTML and JavaScript files are located
 
 # Load the trained model
 model = joblib.load("Diabetese_Prediction.joblib")
@@ -27,42 +23,53 @@ def write_to_csv(input_data, prediction):
                 writer.writerow(columns)
             writer.writerow(input_data + [prediction])
     except Exception as e:
-        print(f"Error writing to CSV: {str(e)}")
+        st.error(f"Error writing to CSV: {str(e)}")
 
 def predict_diabetes(input_data):
     try:
         # Transform input data using the scaler
-        input_data_scaled = scaler.fit_transform(np.array(input_data).reshape(1, -1))
+        input_data_scaled = scaler.transform(np.array(input_data).reshape(1, -1))
         
         # Predict using the trained model
         prediction = model.predict(input_data_scaled)
         
         # Return prediction result
-        return prediction[0],"Has Diabetes" if prediction == 1 else "Does Not Have Diabetes"
+        return prediction[0],"Has Diabetes" if prediction[0] == 1 else "Does Not Have Diabetes"
     except Exception as e:
-        return "Error predicting"
+        st.error(f"Error predicting: {str(e)}")
 
-@eel.expose
-def Diabetes_Prediction(Pregnancies, Glucose, BloodPressure, SkinThickness, Insulin, BMI, DiabetesPedigreeFunction, Age):
-    try:
-        # Convert input data to suitable format
-        Pregnancies = int(Pregnancies)
-        Age = int(Age)
-        input_data = [Pregnancies, float(Glucose), float(BloodPressure), float(SkinThickness), float(Insulin), float(BMI), float(DiabetesPedigreeFunction), Age]
-        
-        # Predict diabetes
-        prediction,result = predict_diabetes(input_data)
-        
-        # Write prediction to CSV
-        write_to_csv(input_data, prediction)
-        
-        # Return prediction result
-        return result
-    except Exception as e:
-        return f"Error processing input: {str(e)}"
+def diabetes_prediction_page():
+    st.title("Diabetes Prediction")
 
-# Start the Eel application
-try:
-    eel.start('app.html', size=(800, 600))
-except Exception as e:
-    print(f"Error starting Eel: {e}")
+    # Input fields
+    pregnancies = st.number_input("Pregnancies", min_value=0, step=1)
+    glucose = st.number_input("Glucose", min_value=0)
+    blood_pressure = st.number_input("Blood Pressure", min_value=0)
+    skin_thickness = st.number_input("Skin Thickness", min_value=0)
+    insulin = st.number_input("Insulin", min_value=0)
+    bmi = st.number_input("BMI", min_value=0.0)
+    diabetes_pedigree_function = st.number_input("Diabetes Pedigree Function", min_value=0.0)
+    age = st.number_input("Age", min_value=0, step=1)
+
+    # Prediction button
+    if st.button("Predict"):
+        try:
+            # Predict diabetes
+            input_data = [pregnancies, glucose, blood_pressure, skin_thickness, insulin, bmi, diabetes_pedigree_function, age]
+            prediction, result = predict_diabetes(input_data)
+            
+            # Write prediction to CSV
+            write_to_csv(input_data, prediction)
+
+            st.success(f"Prediction: {result}")
+        except Exception as e:
+            st.error(f"Error: {str(e)}")
+
+def main():
+    st.set_page_config(page_title="Diabetes Prediction App", layout="wide")
+
+    # Render the Diabetes Prediction page
+    diabetes_prediction_page()
+
+if __name__ == "__main__":
+    main()
