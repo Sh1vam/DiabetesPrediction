@@ -28,7 +28,7 @@ def write_to_csv(input_data, prediction):
 def predict_diabetes(input_data):
     try:
         # Transform input data using the scaler
-        input_data_scaled = scaler.transform(np.array(input_data).reshape(1, -1))
+        input_data_scaled = scaler.fit_transform(np.array(input_data).reshape(1, -1))
         
         # Predict using the trained model
         prediction = model.predict(input_data_scaled)
